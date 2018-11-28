@@ -52,14 +52,14 @@ class PostController extends Controller
 
         $post->save();
 
-        return response()->json($post);
+        return response()->json($post, '204');
     }
 
     public function destroy($id)
     {
-        $post = Post::find($id);
+        $post = Post::findOrFail($id);
         $post->delete();
 
-        return response()->json('post removed.');
+        return response()->json('post removed.', 204);
     }
 }

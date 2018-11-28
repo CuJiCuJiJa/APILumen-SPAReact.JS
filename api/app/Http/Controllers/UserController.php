@@ -64,7 +64,7 @@ class PostController extends Controller
         $user = User::find($id);
         $user->delete();
 
-        return response()->json('user removed.');
+        return response()->json('user removed.', '200');
     }
 
     public function getToken(Request $request)
