@@ -23,5 +23,7 @@ Route::post('/user','UserController@store');
 
 Route::get('/posts','PostController@index');
 Route::get('/post/{id}','PostController@show');
-
+Route::post('/post','PostController@store');
+Route::put('/post/{id}','PostController@update');
+Route::delete('/post/{id}','PostController@destroy');
 //Route::get('/user/{id}',['middleware' => 'shield','uses' => 'Usercontroller@show'])

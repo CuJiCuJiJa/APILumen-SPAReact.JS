@@ -24,7 +24,6 @@ class UserController extends Controller
     }
 
     protected function validator(array $data){
-        
         return Validator::make($data, [
             'name' => 'required|string',
             'password' => 'required|min:6',
@@ -44,8 +43,9 @@ class UserController extends Controller
         $validator = $this->validator($data);   //VALIDATE INPUT
 
         if ($validator->passes()) {             //IF VALIDATION PASSES
+            
             $user = new User;
-
+            
             $user->name = $data['name'];
             $user->password = Hash::make($data['password']);
             $user->email = $data['email'];
@@ -67,16 +67,16 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = User::find();  
-        $data = json_decode($request, true);                    //PARSE JSON INPUT TO ARRAY
-
+        $user = User::find($id);  
+        
+        $data = $request->all();
         $validator = $this->validator($data);                   //VALIDATE INPUT
 
         if ($validator->passes()) {                             //IF VALIDATION PASSES
         
-            $user->name = $data->name;
+            $user->name = $data['name'];
             $user->password = Hash::make($data->password);
-            $user->email = $data->email;
+            $user->email = $data['email'];
 
             $user->save();                                      //SAVE DATA
             return response()->json($user, 200);                //RETURN OK
@@ -91,6 +91,6 @@ class UserController extends Controller
         $user = User::find($id); 
         $user->delete();
 
-        return response()->json(200);
+        return response()->json('Object deleted', 200);
     }
 }
