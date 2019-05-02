@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Post;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;    
 
 class PostController extends Controller
 {
@@ -12,54 +13,85 @@ class PostController extends Controller
      *
      * @return void
      */
+
     public function __construct()
     {
-        //
+        $this->middleware('PostExist', ['only' => [
+            'update',
+            'destroy',
+            'show',
+            'index'
+        ]]);
+    }
+
+    protected function validator(array $data){
+        
+        return Validator::make($data, [
+            'title' => 'required|string',
+            'body' => 'required|string'
+        ]);
     }
 
     public function index()
     {
-        $posts = Post::All();
-        return response()->json($posts, 200);
+        $post = Post::all();
+        return response()->json($post , 200);
     }
 
-    public function create(Request $request)
+    public function store(Request $request)
     {
-        $post = new Post;
+        $data = json_decode($request, true);    //PARSE JSON TO ARRAY
+        
+        $validator = $this->validator($data);   //VALIDATE INPUT
+        
+        if ($validator->passes()) {             //IF VALIDATION PASSES
 
-        $post->title = $request->title;
-        $post->body = $request->body;
-        $post->description = $request->description;
+            $post = new Post;                   //SAVE
+            $post->title = $data->title;
+            $post->body = $data->body;
+            $post->user_id = auth('api')->user()->id; //yo creo que funciona
+            $post->save();
 
-        $post->save();
+            return response()->json($post, 201);//RETURNS OK
+        
+        }else{
 
-        return response()->json($post, 201);
+            return response()->json($validator->errors(), 400); //RETURN VALIDATION ERRORS
+        }
+
     }
 
-    public function show($id)
+    public function update(Request $request, $post) //POST COMES FROM POSTEXIST MIDDLEWARE
     {
-        $post = Post::find($id);
-        return response()->json($post, 200);
+        $data = json_decode($request, true);    //PARSE JSON INPUT TO ARRAY
+        
+        $validator = $this->validator($data);   //VALIDATE INPUT
+
+        if ($validator->passes()) {             //IF VALIDATION PASSES
+            
+            $post->title = $data->title;        
+            $post->body = $data->body;
+
+            $post->save();                      //SAVE DATA
+
+            return response()->json($post, 200);//RETURN OK
+        }else{                                  //IF NOT
+
+            return response()->json($validator->errors(), 400); //RETURN VALIDATION ERRORS
+        }   
     }
 
-    public function update(Request $Request, $id)
-    {
-        $post = Post::find($id);
+    public function destroy($post)              //POST COMES FROM POSTEXIST MIDDLEWARE
+    {   
+        $post->delete();                        //DELETE POST
 
-        $post->title = $request->title;
-        $post->body = $request->body;
-        $post->description = $request->description;
-
-        $post->save();
-
-        return response()->json($post, '204');
+        return response()->json(200);           //RETURN OK
     }
 
-    public function destroy($id)
-    {
-        $post = Post::findOrFail($id);
-        $post->delete();
-
-        return response()->json('post removed.', 204);
+    public function show($post)                 //$POST COMES FROM THE POSTEXIST MIDDLEWARE
+    {                                           //IF POST DOES NOT EXIST THE EXCEPTION IT'S 
+        return response()->json($post, 200);    //CATCHED BY THE MIDDLEWARE //RETURN OK
+                                                
     }
+
 }

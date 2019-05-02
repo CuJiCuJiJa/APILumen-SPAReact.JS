@@ -15,8 +15,13 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->post('/user/login', ['uses' => 'UserController@getToken']);
-$router->get('/users', ['uses' => 'UserController@index']);
-$router->post('/user', ['uses' => 'UserController@create']);
-$router->get('/user/{id}', ['uses' => 'UserController@show']);
-$router->delete('/user/{id}', ['uses' => 'UserController@destroy']);
+Route::get('/users', 'UserController@index');
+Route::get('/user/{id}','UserController@show');
+Route::delete('/user/{id}','UserController@destroy');
+Route::put('/user/{id}','UserController@update');
+Route::post('/user','UserController@store');
+
+Route::get('/posts','PostController@index');
+Route::get('/post/{id}','PostController@show');
+
+//Route::get('/user/{id}',['middleware' => 'shield','uses' => 'Usercontroller@show'])

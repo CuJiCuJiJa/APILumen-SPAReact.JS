@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
-class PostController extends Controller
+class UserController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -15,27 +16,47 @@ class PostController extends Controller
      */
     public function __construct()
     {
-        //
+        $this->middleware('UserExist', ['only' => [
+            'show',
+            'update',
+            'destroy',
+            'index']]);
+    }
+
+    protected function validator(array $data){
+        
+        return Validator::make($data, [
+            'name' => 'required|string',
+            'password' => 'required|min:6',
+            'email' => 'required|email|unique:users'
+        ]);
     }
 
     public function index()
     {
-        $users = User::All();
+        $users = User::all();
         return response()->json($users, 200);
     }
 
-    public function create(Request $request)
+    public function store(Request $request)
     {
-        $user = new User;
-        $data = $request->json()->all();
-        $user->name = $data->name;
-        $user->password = Hash::make($data->password);
-        $user->email = $data->email;
-        $user->api_token = str_random(60);
+        $data = $request->all();
+        $validator = $this->validator($data);   //VALIDATE INPUT
 
-        $user->save();
+        if ($validator->passes()) {             //IF VALIDATION PASSES
+            $user = new User;
 
-        return response()->json($user, 201);
+            $user->name = $data['name'];
+            $user->password = Hash::make($data['password']);
+            $user->email = $data['email'];
+            $user->api_token = str_random(60);
+        
+            $user->save();
+        
+            return response()->json($user, 201);
+        }else{
+            return response()->json($validator->errors(), 400); //RETURN VALIDATION ERRORS
+        }
     }
 
     public function show($id)
@@ -44,43 +65,32 @@ class PostController extends Controller
         return response()->json($user, 200);
     }
 
-    public function update(Request $Request, $id)
+    public function update(Request $request, $id)
     {
-        $user = User::find($id);
+        $user = User::find();  
+        $data = json_decode($request, true);                    //PARSE JSON INPUT TO ARRAY
 
-        $data = $request->json()->all();
+        $validator = $this->validator($data);                   //VALIDATE INPUT
 
-        $user->name = $data->name;
-        $user->password = Hash::make($data->password);
-        $user->email = $data->email;
+        if ($validator->passes()) {                             //IF VALIDATION PASSES
+        
+            $user->name = $data->name;
+            $user->password = Hash::make($data->password);
+            $user->email = $data->email;
 
-        $user->save();
+            $user->save();                                      //SAVE DATA
+            return response()->json($user, 200);                //RETURN OK
+        }else{                                                  //IF NOT
 
-        return response()->json($user);
-    }
+            return response()->json($validator->errors(), 400); //RETURN VALIDATION ERRORS
+        }
+    }   
 
     public function destroy($id)
     {
-        $user = User::find($id);
+        $user = User::find($id); 
         $user->delete();
 
-        return response()->json('user removed.', '200');
-    }
-
-    public function getToken(Request $request)
-    {
-        $data = $request->json()->all();
-        $user = User::where('name', data['name'])->first();
-
-        //TODO:check if attempt works
-        if ($user && Hash::check($data['password'], $user->password)) 
-        {
-            
-            return response()->json($user, 200);
-        }
-        else
-        {
-            return response()->json(['error' => 'No content'], 406);
-        }
+        return response()->json(200);
     }
 }
