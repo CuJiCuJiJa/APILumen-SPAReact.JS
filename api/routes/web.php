@@ -27,3 +27,11 @@ Route::post('/post','PostController@store');
 Route::put('/post/{id}','PostController@update');
 Route::delete('/post/{id}','PostController@destroy');
 //Route::get('/user/{id}',['middleware' => 'shield','uses' => 'Usercontroller@show'])
+
+
+
+
+//We are going to be using Vue router to handle the front-end URL routing, so we need to ensure everything else gets routed to this.
+$router->get('/{route:.*}/', function ()  {
+    return view('app');
+}); 
